@@ -148,7 +148,9 @@ void main() {
 	const vec3 GRASS = vec3(0.1,0.6,0.0);
 	const vec3 SNOW  = vec3(1.0);
 
-	oColour.rgb = phong*mix(ROCK, SNOW, smoothstep(0.04,0.07,iPosition.y));
+	float a = clamp(smoothstep(0.04,0.07,iPosition.y)+simplex_noise2(iPosition.xz*1.0)*1.125,
+	                0.0,1.0);
+	oColour.rgb = phong*mix(ROCK, SNOW,a );
 }
 
 #endif // _FRAGMENT_
