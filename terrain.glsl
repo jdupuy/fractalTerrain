@@ -12,6 +12,7 @@ uniform mat4 uModelViewProjection;
 uniform float uH;
 uniform float uLacunarity;
 uniform int uOctaves;
+uniform float uHeightScale;
 
 
 // functions
@@ -24,7 +25,7 @@ vec3 permute(vec3 x0,vec3 p) {
 	return floor(  mod( (x1 + p.z) *x0, p.x ));
 }
 
-float simplexNoise2(vec2 v) {
+float simplex_noise2(vec2 v) {
 	const vec2 C = vec2(0.211324865405187134, // (3.0-sqrt(3.0))/6.;
 		                0.366025403784438597); // 0.5*(sqrt(3.0)-1.);
 	const vec3 D = vec3( 0., 0.5, 2.0) * 3.14159265358979312;
@@ -66,22 +67,48 @@ float simplexNoise2(vec2 v) {
 }
 
 
+// procedural fBm (p.437)
 float fBm(vec2 p, float H, float lacunarity, int octaves) {
 	float value = 0.0;
 	for(int i=0;i<octaves; ++i) {
-		value+= simplexNoise2(p) * pow(lacunarity, -H*i);
+		value+= simplex_noise2(p) * pow(lacunarity, -H*i);
 		p*= lacunarity;
 	}
 	return value;
 }
 
+// simple multifractal (p.440)
 float fBm2(vec2 p, float H, float lacunarity, int octaves, float offset) {
-	float value = 0.0;
+	float value = 1.0;
 	for(int i=0;i<octaves; ++i) {
-		value*= (simplexNoise2(p)+offset) * pow(lacunarity, -H*i);
+		value*= (simplex_noise2(p)+offset) * pow(lacunarity, -H*i);
 		p*= lacunarity;
 	}
 	return value;
+}
+
+// ridged multifractal terrain (p.504)
+float fBm3(vec2 p, float H, float lacunarity, int octaves, float offset, float gain) {
+	float result, frequency, signal, weight;
+
+	frequency = 1.0;
+
+	signal = offset - abs(simplex_noise2(p));
+	signal*= signal;
+	result = signal;
+	weight = 1.0;
+
+	for(int i=1; i<octaves; ++i) {
+		p*= lacunarity;
+		weight = clamp(signal*gain, 0.0,1.0);
+		signal = offset - abs(simplex_noise2(p));
+		signal*= signal*weight;
+		result+= signal * pow(frequency, -H);
+		frequency*= lacunarity;
+	}
+
+	return result;
+
 }
 
 
@@ -93,8 +120,9 @@ out vec3 vsPosition;
 
 void main() {
 	vec4 p = vec4(iPosition*uGridScale, 0, 1);
-	p.z = fBm(p.xy, uH, uLacunarity, uOctaves)*0.1;
-//	p.z = fBm2(p.xy, uH, uLacunarity, uOctaves, 0.5)*0.1;
+//	p.z = fBm(p.xy, uH, uLacunarity, uOctaves)*uHeightScale;
+//	p.z = fBm2(p.xy, uH, uLacunarity, uOctaves, 0.8)*uHeightScale;
+	p.z = fBm3(p.xy, uH, uLacunarity, uOctaves, 1.0, 2.0)*uHeightScale;
 	oPosition = p.xzy;
 
 	gl_Position = uModelViewProjection * p.xzyw;
@@ -120,7 +148,7 @@ void main() {
 	const vec3 GRASS = vec3(0.1,0.6,0.0);
 	const vec3 SNOW  = vec3(1.0);
 
-	oColour.rgb = phong*ROCK;
+	oColour.rgb = phong*mix(ROCK, SNOW, smoothstep(0.04,0.07,iPosition.y));
 }
 
 #endif // _FRAGMENT_

@@ -49,20 +49,21 @@ GLuint *buffers       = NULL;
 GLuint *vertexArrays  = NULL;
 GLuint *programs      = NULL;
 
-Affine invCameraWorld       = Affine::Translation(Vector3(0,-1,-8));
+Affine invCameraWorld       = Affine::Translation(Vector3(0,-0.2f,-1));
 Projection cameraProjection = Projection::Perspective(PI*0.25f,
                                                       1.0f,
                                                       0.125f,
                                                       8192.0f);
 
 GLuint gridIndexCount = 0;
-GLuint gridTessLevel  = 255;
-GLfloat gridScale     = 2.0f;
+GLuint gridTessLevel  = 200;
+GLfloat gridScale     = 1.0f;
 GLfloat lightTheta    = 45.0f;
 GLfloat lightRadius   = 3.0f;
 GLfloat fBmH = 1.0f; // h param 
 GLfloat fBmL = 2.0f; // lacunarity
-GLint fBmO   = 10;    // octaves
+GLint fBmO   = 8;    // octaves
+GLfloat fBmS = 0.05f; // scale
 
 bool wireframe = false;
 bool normals   = false;
@@ -146,6 +147,13 @@ void set_fBm_l() {
 	                   fBmL);
 }
 
+void set_fBm_s() {
+	glProgramUniform1f(programs[PROGRAM_TERRAIN],
+	                   glGetUniformLocation(programs[PROGRAM_TERRAIN],
+	                                        "uHeightScale"),
+	                   fBmS);
+}
+
 void set_fBm_o() {
 	glProgramUniform1i(programs[PROGRAM_TERRAIN],
 	                   glGetUniformLocation(programs[PROGRAM_TERRAIN],
@@ -196,6 +204,15 @@ static void TW_CALL get_fBm_l_cb(void *value, void *clientData){
 static void TW_CALL set_fBm_l_cb(const void *value, void *clientData){
 	fBmL = *(const GLfloat *)value;
 	set_fBm_l();
+}
+
+static void TW_CALL get_fBm_s_cb(void *value, void *clientData){
+	*(GLfloat *)value = fBmS;
+}
+
+static void TW_CALL set_fBm_s_cb(const void *value, void *clientData){
+	fBmS = *(const GLfloat *)value;
+	set_fBm_s();
 }
 
 static void TW_CALL get_fBm_o_cb(void *value, void *clientData){
@@ -261,6 +278,7 @@ void on_init() {
 	set_fBm_h();
 	set_fBm_o();
 	set_fBm_l();
+	set_fBm_s();
 
 	glClearColor(0.25, 0.25, 0.25, 1.0);
 	glEnable(GL_DEPTH_TEST);
@@ -329,7 +347,14 @@ void on_init() {
 	           &set_fBm_o_cb,
 	           &get_fBm_o_cb,
 	           NULL,
-	           "min=1 max=20 step=1 group='fBm'");
+	           "min=1 max=16 step=1 group='fBm'");
+	TwAddVarCB(bar,
+	           "Scale",
+	           TW_TYPE_FLOAT,
+	           &set_fBm_s_cb,
+	           &get_fBm_s_cb,
+	           NULL,
+	           "min=0.01 max=5.0 step=0.01 group='fBm'");
 
 #endif // _ANT_ENABLE
 }
