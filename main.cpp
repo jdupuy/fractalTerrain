@@ -32,8 +32,7 @@
 
 const float PI = 3.14159265;
 
-enum GLNames
-{
+enum GLNames {
 	BUFFER_PLANE_VERTICES = 0,
 	BUFFER_PLANE_INDEXES,
 	BUFFER_COUNT,
@@ -316,7 +315,7 @@ void on_init() {
 	           &set_grid_scale_cb,
 	           &get_grid_scale_cb,
 	           NULL,
-	           "min=1 max=255 step=1");
+	           "min=0.1 max=255 step=0.1");
 	TwAddVarRW(bar,
 	           "theta",
 	           TW_TYPE_FLOAT,
@@ -340,7 +339,7 @@ void on_init() {
 	           &set_fBm_l_cb,
 	           &get_fBm_l_cb,
 	           NULL,
-	           "min=0.0 max=5.0 step=0.01 group='fBm'");
+	           "min=0.0 max=16.0 step=0.01 group='fBm'");
 	TwAddVarCB(bar,
 	           "Octaves",
 	           TW_TYPE_INT32,
@@ -529,12 +528,12 @@ void on_mouse_motion(GLint x, GLint y) {
 	sMousePreviousY = y;
 
 	if(mouseLeft) {
-		invCameraWorld.RotateAboutWorldX(-0.01f*MOUSE_YREL);
-		invCameraWorld.RotateAboutLocalY( 0.01f*MOUSE_XREL);
+		invCameraWorld.RotateAboutWorldX(-0.005f*MOUSE_YREL);
+		invCameraWorld.RotateAboutLocalY( 0.005f*MOUSE_XREL);
 	}
 	if(mouseRight) {
-		invCameraWorld.TranslateWorld(Vector3( 0.01f*MOUSE_XREL,
-		                                      -0.01f*MOUSE_YREL,
+		invCameraWorld.TranslateWorld(Vector3( 0.005f*MOUSE_XREL,
+		                                      -0.005f*MOUSE_YREL,
 		                                       0));
 	}
 }
