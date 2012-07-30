@@ -120,9 +120,9 @@ out vec3 vsPosition;
 
 void main() {
 	vec4 p = vec4(iPosition*uGridScale, 0, 1);
-//	p.z = fBm(p.xy, uH, uLacunarity, uOctaves)*uHeightScale;
+	p.z = fBm(p.xy, uH, uLacunarity, uOctaves)*uHeightScale;
 //	p.z = fBm2(p.xy, uH, uLacunarity, uOctaves, 0.8)*uHeightScale;
-	p.z = fBm3(p.xy, uH, uLacunarity, uOctaves, 1.0, 2.0)*uHeightScale;
+//	p.z = fBm3(p.xy, uH, uLacunarity, uOctaves, 0.8, 2.1)*uHeightScale;
 	oPosition = p.xzy;
 
 	gl_Position = uModelViewProjection * p.xzyw;
